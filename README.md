@@ -1,1 +1,1 @@
-# edge-ai-microcourse
+# Edge_AI_Perf
