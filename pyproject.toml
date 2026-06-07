@@ -1,5 +1,5 @@
 [project]
-name = "geo_northarrow"
+name = "edge_ai_perf"
 version = "v0.2.0-alpha"
 dependencies = [
     'pandas',
