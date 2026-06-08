@@ -149,7 +149,7 @@ Markdown table data is loaded (ETL) into a `pandas Dataframe` for processing.
 
 ## Example Code to Calculate Model Baseline Performance data:
 
-Here we show how to calculate three require inputs into the library from a PyTorch model.
+Here we show how to calculate three PyTorch model metrics, as required inputs for the library functions.
 
 1. `weight_dtype` : - data type of model parameters
 2. `pte_size_bytes` : - size of the model parameters in RAM.
