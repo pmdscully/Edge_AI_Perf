@@ -34,6 +34,12 @@ Markdown table data is loaded (ETL) into a `pandas Dataframe` for processing.
 
 * `edge_hardware_table.md`
   * A fixed set of devices from a hardware table, which specifies their (verified) hardware profile characteristics.
+  * The original table provides a range of 10 devices covering different form-factors, weights, compute capacities, prices, release dates and sizes
+    * 2x Embedded:
+    * 3x Embedded Dev Boards
+    * 2x Smartphones
+    * 2x PCIe Boards for desktops
+    * 1x GPU Server Unit.
 * `EmissionsFactor_Calculation.md` 
   * A known CO2-EQ emissions factor calculation (Scope 2 + Scope 3) from kilowatt hours (KWH), collected from national greenhouse gas organization source(s).
   * Currently implemented for: `Thailand` for runtimes from  `Jan 2026` to  `March 2026`.
@@ -125,8 +131,9 @@ Plotting.plot_comparison_metrics(df_comparison)
 | 10   | NVIDIA DGX B200             |          | 🗸                          | 0.00              | 0.00              | 0.00            | 0.00            | 0.00               | 0.00               |
 
 * The output plots illustrate:
-  1. Gains/losses of dtypes choices, i.e. quantizing into `int8` or floating points.
-  2. CO2-eq Efficiencies, according to an IPCC Tier 1 emissions factor for CO2-eq (KG) per KWH of energy consumption.
+  1. `Inference Time Gains/losses` by dtypes choices and hardware,  i.e. quantizing into `int8` or floating points. 
+     *Note, missing bars indicate no support for that dtype, (i.e. Syntiant NDP200 has no data on FP performance).*
+  2. `CO2-eq Efficiencies`, according to an IPCC Tier 1 emissions factor for CO2-eq (KG) per KWH of energy consumption.
 
 ![Barplot_Latency_CO2](README.assets/Barplot_Latency_CO2.png)
 
@@ -455,10 +462,19 @@ Output example:
 
 ---
 
-## Future Improvements:
+## Limitations / Warnings / Future Improvements:
 
-1. Incorporate `memory speed efficiencies`; a distinct performance bottleneck for large scale models and hardware.
-2. Add and specify columns  for `OPS per dtype`  (e.g. INT4, INT8, FP8, BF16, TF32) into the processors hardware table for per data type performance throughput (from datasheets).
+1. **Currently, only two types of memory data types are estimated (`INT8` and `FP8`).**  Warnings:
+   - The mapping from model param dtype to the columns in the table are approximate, see [code line](https://github.com/pmdscully/Edge_AI_Perf/blob/bf07357b21b540eb01d1a473813121246f37b148/lib_edge_eval/lib_edge_eval.py#L113).
+   - The hardware columns in the table specify `TOPS` (i.e. `INT`) and `TFLOPS` (i.e. `FP`), this is draft, as a broad estimate of the two dtype performance choices. 
+   - Improvements are invited to: 
+     - Replace TOPS / TFLOPS  with specific columns  for `OPS per dtype`  (e.g. INT4, INT8, FP8, BF16, TF32) into the processors hardware table for per data type performance throughput (from datasheets).
+     - Update specific operations per second (OPS) per data type to the code mappings.
+
+2. Incorporate efficiencies information into estimates: i.e.
+   1.  `memory speed efficiencies`; a distinct performance bottleneck for large scale models and hardware.
+   2. `ops to energy efficiencies`:  this is illustrated already by the 
+
 
 
 
