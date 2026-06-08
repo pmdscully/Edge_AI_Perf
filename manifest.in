@@ -1,1 +1,1 @@
-include geo_northarrow/*.py
+include lib_edge_eval/*.py
