@@ -481,7 +481,7 @@ Output example:
 
 2. Incorporate efficiencies information into estimates: i.e.
    1.  `memory speed efficiencies`; a distinct performance bottleneck for large scale models and hardware.
-   2. `ops to energy efficiencies`:  this is illustrated already by the 
+   2. `ops to watts efficiencies`:  this is illustrated by the relationship from TOPS/TFLOPS to Watts, and shown in CO2-EQ-kg plot.
 
 
 
