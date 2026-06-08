@@ -1,56 +1,94 @@
 # Edge_AI_Perf
 
+(Alpha version: correct for the specified use case: T4, Thailand, from Jan 2026)
+
+## Objective:
+
+The goal of this python library is to make simple/ quick benchmark estimates of DL/LLM machine learning models for their deployment viability onto edge computing devices. 
+
+### Approach
+
+The methodology is simple:
+
+1. Measure the performance characteristics on known hardware (currently Google Colab's T4 GPU).
+2. Quantify their performance values for other hardware profiles, according to their ratio differences from T4.
+
+This approach makes it simple and viable to update a known table of hardware, and benchmark many devices simultaneously.
+
+It differs from ML Commons' ML Perf which perform benchmarks through tests to give precise results for limited hardware. Whereas this methodology gives **quick estimated results for all hardware specs extracted from a data source** (below). 
+
+### **Performance Measurements:**
+
+The output estimated measures are **per 1 million inference-time inputs** for both ***`INT8`*** and ***`FP16`*** data types, for the following metrics:
+
+* Inference time, 
+* Watt Hours, 
+* CO2EQ
+* Model fitment viability (i.e. inputs, model param and OS) into operational runtime memory.
+
+### **Data Sources:**
+
+Markdown table data is loaded (ETL) into a `pandas Dataframe` for processing.
+
+* `edge_hardware_table.md`
+  * A fixed set of devices from a hardware table, which specifies their (verified) hardware profile characteristics.
+* `EmissionsFactor_Calculation.md` 
+  * A known CO2-EQ emissions factor calculation (Scope 2 + Scope 3) from kilowatt hours (KWH), collected from national greenhouse gas organization source(s).
+  * Currently implemented for: `Thailand` for runtimes from  `Jan 2026` to  `March 2026`.
+
+
 
 ## Installation:
+
 (Use `!pip` for notebook installations, Jupyter, Colab, etc.)
-```
-pip install git+https://github.com/pmdscully/geo_northarrow.git
-```
-
-
-
 ```bash
-!pip install git+https://github.com/pmdscully/Edge_AI_Perf.git --upgrade
+pip install git+https://github.com/pmdscully/Edge_AI_Perf.git --upgrade
 ```
 
 
+
+## Usage Example:
+
+* **First, specify or calculate from your model the following items:**
+  * Measurement of **average time in milliseconds** for an inference (1-unit) via a warm-start model inference (forward pass) trial (e.g. mean time to infer 100 inputs).
+  * in-memory byte size of the model *(e.g. quantized, compressed or original)*,
+  * datatype of the parameters as used in the inference time measurement. 
+    * Used to estimate inference time as the another category type: TOPS or TFLOPS.
+    * i.e. quantized / unquantized, int32, fp16 (bf16), int4, int8, etc. 
+    * Currently only supports ['int8','fp8'] (which are int8, and floats of any unfixed size). *Improve the accuracy and completeness of the hardware data source table, to improve this estimate.*
+
+```python
+# ---- Data from model (e.g. ExecuTorch/ PyTorch):
+baseline_time_ms = 1   # Avg. Time for an Inference (warm-start forward pass).
+pte_size_bytes = 9e5
+weight_dtype = 'int8'  # Parameter dtype
+```
+
+* Specify the hardware used (in your current environment) for the baseline (use **`Colab T4`**)
 
 ```python
 from lib_edge_eval import fetch_edge_hardware_dataframe, calculate_edge_metrics, Plotting
 
-# ---- Data from model (e.g. ExecuTorch/ PyTorch):
-pte_size_bytes = 9e5
-weight_dtype = 'int8'  # Parameter dtype, i.e. quantized / unquantized, int32, fp16, int4, int8, etc. Currently
-baseline_time_ms = 1   # 
-```
-
-
-
-* Specify the hardware used (in your current environment) for the baseline
-  * Estimates are calculated
-
-```python
-# ======= Calculate from Baseline: ========
+# ======= Load the Hardware Table: ========
 df_final = fetch_edge_hardware_dataframe()
-baseline_index = 8 # 8 = NVIDIA T4 GPU
-baseline_memory_bytes = pte_size_bytes
-baseline_time_ms = 1
-baseline_dtype = weight_dtype if weight_dtype ['int8','fp8'] else 'fp8'
 
-# Execution call
+# ======= Specify the Baseline from the Hardware Table: ========
+baseline_index = 8 # 8 = NVIDIA T4 GPU
+
+# ======= Calculate from Baseline: ========
 df_comparison = calculate_edge_metrics(
     df=df_final,
     baseline_idx=baseline_index,
     baseline_ms=baseline_time_ms,
-    baseline_mem=baseline_memory_bytes,
-    baseline_dtype=baseline_dtype
+    baseline_mem=pte_size_bytes,
+    baseline_dtype=weight_dtype if weight_dtype ['int8','fp8'] else 'fp8'
 )
 
 display(df_comparison.round(2))
 Plotting.plot_comparison_metrics(df_comparison)
 ```
 
-* 
+- Output the Table of Results and Plot:
 
 |      | Device Name                 | Baseline | Int8/FP8 Params Fit (Est.) | Hours per 1M INT8 | Hours per 1M FP16 | KWh per 1M INT8 | KWh per 1M FP16 | CO2-EQ per 1M INT8 | CO2-EQ per 1M FP16 |
 | ---- | --------------------------- | -------- | -------------------------- | ----------------- | ----------------- | --------------- | --------------- | ------------------ | ------------------ |
@@ -66,4 +104,16 @@ Plotting.plot_comparison_metrics(df_comparison)
 | 9    | NVIDIA RTX 4090             |          | 🗸                          | 0.00              | 0.02              | 0.00            | 0.02            | 0.00               | 0.01               |
 | 10   | NVIDIA DGX B200             |          | 🗸                          | 0.00              | 0.00              | 0.00            | 0.00            | 0.00               | 0.00               |
 
+* The output plots illustrate:
+  1. Gains/losses of dtypes choices, i.e. quantizing into `int8` or floating points.
+  2. CO2-eq Efficiencies, according to the 
+
 ![Barplot_Latency_CO2](README.assets/Barplot_Latency_CO2.png)
+
+## Future Improvements:
+
+1. Incorporate memory speed efficiencies; a distinct performance bottleneck for large scale models and hardware.
+2. Add and specify columns  for `OPS per dtype`  (e.g. INT4, INT8, FP8, BF16, TF32) into the processors hardware table for per data type performance throughput (from datasheets).
+
+
+
