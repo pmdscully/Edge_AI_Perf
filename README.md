@@ -280,11 +280,15 @@ print(f"Weight datatype: {weight_dtype}")
 Output example:
 
 > ExecuTorch Program (.pte) size: 276364 bytes (269.89 KB)
+>
 > PyTorch Model (.pth) size: 283159 bytes (276.52 KB)
+>
+> 
 >
 > Size Difference: 2.40% change in footprint
 >
 > Inference weights size (approx): 276364 bytes
+>
 > Weight datatype: float32
 
 #### 3. Inference Time in MS:
@@ -325,7 +329,9 @@ print(f"Speedup: {time_ms_pytorch / time_ms_inf:.2f}x")
 Output example:
 
 > ExecuTorch Avg Inference Time (150 trials): 0.074 ms
+>
 > PyTorch Avg Inference Time (150 trials): 1.572 ms
+>
 > Speedup: 21.30x
 
 #### 4. Summary Model Deployment Performance Comparison Report:
@@ -418,13 +424,21 @@ Output example:
 > | 4    | Inference Time (ms) | 1.572            | 0.074             | -95.31% |
 >
 > --- In-Memory (RAM) Footprint Change ---
+>
 > PyTorch Model: 276.52 KB
+>
 > ExecuTorch Program: 269.89 KB
+>
 > Difference: -2.40%
 >
+> 
+>
 > --- Throughput Change (on baseline hardware) ---
+>
 > PyTorch: 1.2404 GFLOPS
+>
 > ExecuTorch: 26.4224 GFLOPS
+>
 > Speedup Factor: 21.30x faster
 
 
