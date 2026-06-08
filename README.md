@@ -4,45 +4,11 @@ Alpha version.
 
 *Tested for the specified use case: (1) Using Colab T4, (2) Calculate CO2-EQ for Thailand from Jan 2026.*
 
-## Objective:
+## Objective & Problem:
 
-The goal of this python library is to make simple/ quick benchmark estimates of DL/LLM machine learning models for their deployment viability onto edge computing devices. 
+* **Goal:** A library to make simple/ quick benchmark estimates of DL/LLM machine learning models for their deployment viability onto edge computing devices. 
 
-### Approach
-
-The methodology is simple:
-
-1. Measure the performance characteristics on known hardware (currently Google Colab's T4 GPU).
-2. Quantify their performance values for other hardware profiles, according to their ratio differences from T4.
-
-This approach makes it simple and viable to update a known table of hardware, and benchmark many devices simultaneously.
-
-It differs from ML Commons' ML Perf which perform benchmarks through tests to give precise results for limited hardware. Whereas this methodology gives **quick estimated results for all hardware specs extracted from a data source** (below). 
-
-### **Performance Measurements:**
-
-The output estimated measures are **per 1 million inference-time inputs** for both ***`INT8`*** and ***`FP16`*** data types, for the following metrics:
-
-* Inference time, 
-* Watt Hours, 
-* CO2EQ
-* Model fitment viability (i.e. inputs, model param and OS) into operational runtime memory.
-
-### **Data Sources:**
-
-Markdown table data is loaded (ETL) into a `pandas Dataframe` for processing.
-
-* `edge_hardware_table.md`
-  * A fixed set of devices from a hardware table, which specifies their (verified) hardware profile characteristics.
-  * The original table provides a range of 10 devices covering different form-factors, weights, compute capacities, prices, release dates and sizes
-    * 2x Embedded:
-    * 3x Embedded Dev Boards
-    * 2x Smartphones
-    * 2x PCIe Boards for desktops
-    * 1x GPU Server Unit.
-* `EmissionsFactor_Calculation.md` 
-  * A known CO2-EQ emissions factor calculation (Scope 2 + Scope 3) from kilowatt hours (KWH), collected from national greenhouse gas organization source(s).
-  * Currently implemented for: `Thailand` for runtimes from  `Jan 2026` to  `March 2026`.
+* **Problem:** Estimating the feasibility and viability for (edge) hardware deployments is hard. Benchmarking data is patchy (in product specs, datasheets and benchmark tools). This library serves to give simple (*approximate*) estimates for a broad range of device deployment, measured by a ratio comparison from a baseline performance, without long benchmarking trials (differing from MLPerf / MLCommons).
 
 
 
@@ -136,6 +102,48 @@ Plotting.plot_comparison_metrics(df_comparison)
   2. `CO2-eq Efficiencies`, according to an IPCC Tier 1 emissions factor for CO2-eq (KG) per KWH of energy consumption.
 
 ![Barplot_Latency_CO2](README.assets/Barplot_Latency_CO2.png)
+
+
+
+## Methodology:
+
+The methodology is simple:
+
+1. Measure the performance characteristics on known hardware (currently Google Colab's T4 GPU).
+2. Quantify their performance values for other hardware profiles, according to their ratio differences from T4.
+
+This approach makes it simple and viable to update a known table of hardware, and benchmark many devices simultaneously.
+
+It differs from ML Commons' ML Perf which perform benchmarks through tests to give precise results for limited hardware. Whereas this methodology gives **quick estimated results for all hardware specs extracted from a data source** (below). 
+
+### **Key Performance Measurements:**
+
+The output estimated measures are **per 1 million inference-time inputs** for both ***`INT8`*** and ***`FP16`*** data types, for the following metrics:
+
+* Inference time, 
+* Watt Hours, 
+* CO2EQ
+* Model fitment viability (i.e. inputs, model param and OS) into operational runtime memory.
+
+### **Data Sources:**
+
+Markdown table data is loaded (ETL) into a `pandas Dataframe` for processing.
+
+* `edge_hardware_table.md`
+  * A fixed set of devices from a hardware table, which specifies their (verified) hardware profile characteristics.
+  * The original table provides a range of 10 devices covering different form-factors, weights, compute capacities, prices, release dates and sizes
+    * 2x Embedded:
+    * 3x Embedded Dev Boards
+    * 2x Smartphones
+    * 2x PCIe Boards for desktops
+    * 1x GPU Server Unit.
+* `EmissionsFactor_Calculation.md` 
+  * A known CO2-EQ emissions factor calculation (Scope 2 + Scope 3) from kilowatt hours (KWH), collected from national greenhouse gas organization source(s).
+  * Currently implemented for: `Thailand` for runtimes from  `Jan 2026` to  `March 2026`.
+
+
+
+
 
 ---
 
