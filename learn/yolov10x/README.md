@@ -1,37 +1,3 @@
----
-tags:
-- object-detection
-- fire-detection
-- smoke-detection
-license: apache-2.0
-datasets:
-- fire-smoke-dataset
-model-index:
-- name: YOLOv10-Fire-Smoke-Detection
-  results:
-  - task:
-      type: object-detection
-      name: Object Detection
-    dataset:
-      name: Fire and Smoke Dataset
-      type: fire-smoke-dataset
-    metrics:
-    - type: mAP
-      value: 0.85
-widget:
-- src: >-
-    https://huggingface.co/TommyNgx/YOLOv10-Fire-and-Smoke-Detection/resolve/main/examples/example1.jpg
-  example_title: Fire
-- src: >-
-    https://huggingface.co/TommyNgx/YOLOv10-Fire-and-Smoke-Detection/resolve/main/examples/example1.jpg
-  example_title: Smoke
-library_name: pytorch
-base_model:
-- Ultralytics/YOLO11
-metrics:
-- recall
----
-
 
 # YOLOv10: Real-Time Fire and Smoke Detection
 
@@ -66,7 +32,7 @@ import torch
 from ultralytics import YOLO
 from PIL import Image
 
-model = YOLO('yolov10x/best.pt.bz2')
+model = YOLO('best.pt.bz2')
 
 # Run inference
 fn = "https://source.roboflow.com/4yCe2goCmUhzFDmTTBdl0OghOQ02/01sskxb7SHbGiRrHyQek/thumb.jpg"
