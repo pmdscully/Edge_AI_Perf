@@ -54,15 +54,16 @@ display(df_final)
 # ======= Specify the Baseline from the Hardware Table: ========
 baseline_index = 8 # 8 = NVIDIA T4 GPU
 ```
-* Display some of the dataframe characteristics
+* Visualize the dataframe characteristics:
 
 ```python
-Plotting.plot_hardware_comparisons(df_final)
+Plotting.plot_hardware_comparisons(df_final,
+                                   #metrics=[cols],
+                                   #titles=[cols]
+                                  )
 ```
 
-
-
-![Simple_HardwarePlots](README.assets/Simple_HardwarePlots-1780979048213-3.png)
+![Simple_HardwarePlots](README.assets/Simple_HardwarePlots-1780979247313-5.png)
 
 ##### Calculate Deployment on Range of Hardware:
 
