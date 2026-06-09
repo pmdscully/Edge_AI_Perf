@@ -57,13 +57,16 @@ baseline_index = 8 # 8 = NVIDIA T4 GPU
 * Visualize the dataframe characteristics:
 
 ```python
-Plotting.plot_hardware_comparisons(df_final,
-                                   #metrics=[cols],
-                                   #titles=[cols]
-                                  )
+Plotting.plot_hardware_comparisons(df_final)
+Plotting.plot_hardware_comparisons(df_final, 
+                                   metrics=['Peak TOPS (INT8/NPU)', 'Peak TFLOPS (FP32/GPU)'],
+                                   titles=['Peak TOPS (INT8/NPU)', 'Peak TFLOPS (FP32/GPU)']
+                                   )
 ```
 
 ![Simple_HardwarePlots](README.assets/Simple_HardwarePlots-1780979247313-5.png)
+
+![Simple_HardwarePlots_OPS](README.assets/Simple_HardwarePlots_OPS.png)
 
 ##### Calculate Deployment on Range of Hardware:
 
