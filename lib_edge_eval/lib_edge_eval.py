@@ -164,7 +164,7 @@ class Plotting:
                 axes[i].set_xscale('log')
             else:
                 axes[i].set_title(f'Column {metric} not found')
-    
+        axes[0].invert_yaxis()
         plt.tight_layout()
         plt.show()
         
