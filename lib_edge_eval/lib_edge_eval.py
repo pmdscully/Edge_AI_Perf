@@ -145,6 +145,29 @@ def calculate_edge_metrics(df, baseline_idx, baseline_ms, baseline_mem, baseline
     return dfr.drop(columns=['Peak Wattage (W)'])
 
 class Plotting:    
+    
+    def plot_hardware_comparisons(df, 
+                                  metrics = ['Peak Wattage (W)', 'Total Unit Weight', 'Approx. Unit Cost ($)', 'Memory Speed', 'Power Efficiency'],
+                                  titles = ['Peak Power Consumption (Watts)', 'Total Unit Weight (grams)', 'Approx. Unit Cost ($)', 'Memory Speed', 'Power Efficiency']
+                                  ):
+        """Generates a multi-panel comparison of edge hardware metrics."""
+        fig, axes = plt.subplots(1, len(metrics), figsize=(18, 3), sharey=True)
+    
+        for i, metric in enumerate(metrics):
+            if metric in df.columns:
+                axes[i].barh(df['Device Name'], df[metric], color='skyblue', edgecolor='navy')
+                axes[i].set_title(titles[i], fontsize=12, fontweight='bold')
+                axes[i].set_xlabel(metric+' (log-scale)')
+                axes[i].grid(axis='x', linestyle='--', alpha=0.6)
+    
+                # Apply log scale to handle wide range of values
+                axes[i].set_xscale('log')
+            else:
+                axes[i].set_title(f'Column {metric} not found')
+    
+        plt.tight_layout()
+        plt.show()
+        
     def plot_comparison_metrics(df_results, title_suffix=""):
         """
         Generates a professional, condensed dual-panel horizontal bar chart.
