@@ -1,6 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "edge_ai_perf"
 version = "v0.2.0-alpha"
+description = "Edge AI Performance Evaluation Tools"
 dependencies = [
     'pandas',
     'numpy',
@@ -8,3 +13,7 @@ dependencies = [
     'seaborn',
     'requests',
 ]
+
+[tool.setuptools]
+# Only treat lib_edge_eval as the distributable Python package
+packages = ["lib_edge_eval"]
