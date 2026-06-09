@@ -45,7 +45,7 @@ weight_dtype = 'int8'  # Parameter dtype
   * Currently tested on **`Colab T4`**, which is row index 8 in the table.
 
 ```python
-from lib_edge_eval import fetch_edge_hardware_dataframe
+from lib_edge_eval import fetch_edge_hardware_dataframe, Plotting
 
 # ======= Load the Hardware Table: ========
 df_final = fetch_edge_hardware_dataframe()
@@ -54,6 +54,16 @@ display(df_final)
 # ======= Specify the Baseline from the Hardware Table: ========
 baseline_index = 8 # 8 = NVIDIA T4 GPU
 ```
+* Display some of the dataframe characteristics
+
+```python
+Plotting.plot_hardware_comparisons(df_final)
+```
+
+
+
+![Simple_HardwarePlots](README.assets/Simple_HardwarePlots-1780979048213-3.png)
+
 ##### Calculate Deployment on Range of Hardware:
 
 Here we use the `Edge_AI_Perf` python library to estimate performance over a range of tiny to large hardware:
