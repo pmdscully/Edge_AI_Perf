@@ -224,11 +224,18 @@ class Plotting:
             bars_fp16 = ax.barh(y_pos - width/2, df_results[col_fp16], width, 
                                 color='white', edgecolor=palette, hatch='//', linewidth=0.75, zorder=3)
     
-            # Baseline Highlighting
+            # Baseline Highlighting & Empty String Grey-out
             for i in range(len(df_results)):
+                # Apply baseline colors first
                 if df_results.iloc[i]['Baseline'] == '🗸':
                     bars_int8[i].set_color('#d62728')
                     bars_fp16[i].set_edgecolor('#d62728')
+                
+                # CRUCIAL: Check for an empty string to grey out the bars
+                val = df_results.iloc[i]['Int8/FP8 Params Fit (Est.)']
+                if str(val).strip() == '':  # Handles '', ' ', and variations robustly
+                    bars_int8[i].set_alpha(0.15)
+                    bars_fp16[i].set_alpha(0.15)
     
             ax.set_yticks(y_pos)
             ax.set_yticklabels(df_results['Device Name'], fontsize=label_fontsize)
@@ -246,19 +253,16 @@ class Plotting:
             ax.invert_yaxis() 
     
         # --- PANEL 0: Time per Inference (Linear) ---
-        # Using the new dataframe columns calculated natively in seconds
         draw_paired_bars(ax0, 'Latency per Inf. INT8 (s)', 'Latency per Inf. FP16 (s)', 
                          f'Latency per Single Inference {title_suffix}', xscale='linear')
         ax0.set_xlabel('Seconds (Linear Scale)', fontsize=label_fontsize)
     
         # --- PANEL 1: Hours per 1M (Log) ---
-        # Updated to the new 'Inf.' column names
         draw_paired_bars(ax1, 'Hours per 1M Inf. INT8', 'Hours per 1M Inf. FP16', 
                          f'Total Time: Hours per 1M Ops {title_suffix}', xscale='log')
         ax1.set_xlabel('Hours (Log Scale)', fontsize=label_fontsize)
     
         # --- PANEL 2: CO2-EQ (Log) ---
-        # Updated to the new '-kg' column names
         draw_paired_bars(ax2, 'CO2-EQ-kg per 1M INT8', 'CO2-EQ-kg per 1M FP16', 
                          f'Environmental Impact: kg CO2-eq per 1M Ops {title_suffix}', xscale='log')
         ax2.set_xlabel('kg CO2-eq (Log Scale)', fontsize=label_fontsize)
