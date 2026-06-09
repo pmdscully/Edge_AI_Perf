@@ -102,6 +102,7 @@ def calculate_edge_metrics(df, baseline_idx, baseline_ms, baseline_mem, baseline
     """
     Calculates comparative performance, energy, and CO2 metrics across edge devices.
     Handles cross-dtype time correction based on the baseline device's throughput ratio.
+    Includes per-inference latency metrics in milliseconds.
     """
     def get_time_baselines(b_idx, b_ms, b_dtype):
         """Sub-function to calculate correctly scaled time baselines for both dtypes."""
@@ -119,33 +120,53 @@ def calculate_edge_metrics(df, baseline_idx, baseline_ms, baseline_mem, baseline
             fp32_base = measured_hr_per_1M
             int8_base = measured_hr_per_1M * (t4_tflops / t4_tops)
         return int8_base, fp32_base, t4_tops, t4_tflops
+
     def get_kwh(time_in_hrs, baseline_watts):
-        return (baseline_watts /1000) * time_in_hrs
+        return (baseline_watts / 1000) * time_in_hrs
+
     def ms_to_hr(time_ms):
         return time_ms / 1000 / 60 / 60
     
     # 1. Get corrected baselines
     int8_base_hr, fp32_base_hr, t4_tops, t4_tflops = get_time_baselines(baseline_idx, baseline_ms, baseline_dtype)
+    
     # Initialize results DataFrame
     dfr = pd.DataFrame(df[['Device Name', 'Peak Wattage (W)']].copy())
     dfr['Baseline'] = ''
     dfr.loc[baseline_idx, 'Baseline'] = '🗸'
+    
     # 2. RAM Fit Estimation
     dfr['Int8/FP8 Params Fit (Est.)'] = (df['Est. RAM for Params (Bytes)'] >= baseline_mem).map({True: '🗸', False: ''})
-    # 3. Performance Scaling using respective baselines
-    dfr['Hours per 1M INT8'] = (t4_tops / df['Peak TOPS (INT8/NPU)']) * int8_base_hr
-    dfr['Hours per 1M FP16'] = (t4_tflops / df['Peak TFLOPS (FP32/GPU)']) * fp32_base_hr
-    # 4. Energy Consumption
-    dfr['KWh per 1M INT8'] = dfr.apply(lambda x: get_kwh(x['Hours per 1M INT8'], x['Peak Wattage (W)']), axis=1)
-    dfr['KWh per 1M FP16'] = dfr.apply(lambda x: get_kwh(x['Hours per 1M FP16'], x['Peak Wattage (W)']), axis=1)
-    # 5. Carbon Emissions
-    dfr['CO2-EQ per 1M INT8'] = dfr['KWh per 1M INT8'].apply(lambda x: get_co2_emissions(x, country_code=country))
-    dfr['CO2-EQ per 1M FP16'] = dfr['KWh per 1M FP16'].apply(lambda x: get_co2_emissions(x, country_code=country))
-
-    return dfr.drop(columns=['Peak Wattage (W)'])
-
-class Plotting:    
     
+    # 3. Performance Scaling using respective baselines
+    dfr['Hours per 1M Inf. INT8'] = (t4_tops / df['Peak TOPS (INT8/NPU)']) * int8_base_hr
+    dfr['Hours per 1M Inf. FP16'] = (t4_tflops / df['Peak TFLOPS (FP32/GPU)']) * fp32_base_hr
+    
+    # --- ADDED: Latency per Single Inference (ms) ---
+    # Conversion: (Hours / 1,000,000) * 3,600,000 ms/hr = Hours * 3.6 # to ms
+    # Conversion: (Hours / 1,000,000) * 3,600,000 ms/hr = Hours * 0.0036 # to sec
+    dfr['Latency per Inf. INT8 (s)'] = dfr['Hours per 1M Inf. INT8'] * 0.0036
+    dfr['Latency per Inf. FP16 (s)'] = dfr['Hours per 1M Inf. FP16'] * 0.0036
+    
+    # 4. Energy Consumption
+    dfr['KWh per 1M INT8'] = dfr.apply(lambda x: get_kwh(x['Hours per 1M Inf. INT8'], x['Peak Wattage (W)']), axis=1)
+    dfr['KWh per 1M FP16'] = dfr.apply(lambda x: get_kwh(x['Hours per 1M Inf. FP16'], x['Peak Wattage (W)']), axis=1)
+    
+    # 5. Carbon Emissions
+    dfr['CO2-EQ-kg per 1M INT8'] = dfr['KWh per 1M INT8'].apply(lambda x: get_co2_emissions(x, country_code=country))
+    dfr['CO2-EQ-kg per 1M FP16'] = dfr['KWh per 1M FP16'].apply(lambda x: get_co2_emissions(x, country_code=country))
+    dfr = dfr.drop(columns=['Peak Wattage (W)'])
+    dfr = dfr[['Device Name', 'Baseline', 'Int8/FP8 Params Fit (Est.)',
+               'Latency per Inf. INT8 (s)', 
+               'Latency per Inf. FP16 (s)', 
+               'Hours per 1M Inf. INT8', 'Hours per 1M Inf. FP16',
+               'KWh per 1M INT8',
+               'KWh per 1M FP16', 
+               'CO2-EQ-kg per 1M INT8', 
+               'CO2-EQ-kg per 1M FP16']]
+    return dfr
+
+class Plotting:
     def plot_hardware_comparisons(df, 
                                   metrics = ['Peak Wattage (W)', 'Total Unit Weight', 'Approx. Unit Cost ($)', 'Memory Speed', 'Power Efficiency'],
                                   titles = ['Peak Power Consumption (Watts)', 'Total Unit Weight (grams)', 'Approx. Unit Cost ($)', 'Memory Speed', 'Power Efficiency']
