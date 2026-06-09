@@ -170,14 +170,15 @@ class Plotting:
         
     def plot_comparison_metrics(df_results, title_suffix=""):
         """
-        Generates a professional, condensed dual-panel horizontal bar chart.
+        Generates a professional, condensed three-panel horizontal bar chart.
         Uses darkgrid for reduced brightness and tightened vertical layout.
         """
         # Professional, lower-brightness style
         sns.set_theme(style="darkgrid")
-        # Reduced height from 10 to 7 to condense white space
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7))
-    
+        
+        # Increased height to fit the third panel while keeping it condensed
+        fig, (ax0, ax1, ax2) = plt.subplots(3, 1, figsize=(10, 10))
+        
         label_fontsize = 8
         title_fontsize = 10
         
@@ -186,7 +187,8 @@ class Plotting:
         int8_legend = mpatches.Patch(color='#4c72b0', label='INT8 (Solid)')
         fp16_legend = mpatches.Patch(edgecolor='#4c72b0', facecolor='white', hatch='//', linewidth=1.2, label='FP16/FP8 (Hatched)')
     
-        def draw_paired_bars(ax, col_int8, col_fp16, title):
+        # Added 'xscale' parameter to toggle linear vs log per panel
+        def draw_paired_bars(ax, col_int8, col_fp16, title, xscale='log'):
             y_pos = np.arange(len(df_results))
             width = 0.35  
     
@@ -217,21 +219,30 @@ class Plotting:
                     label.set_color('#d62728')
                     label.set_fontweight('bold')
     
-            ax.set_xscale('log')
+            ax.set_xscale(xscale)
             ax.set_title(title, loc='left', fontsize=title_fontsize, fontweight='bold', pad=8)
             ax.legend(handles=[red_patch, int8_legend, fp16_legend], loc='lower right', fontsize=7, frameon=True)
             ax.invert_yaxis() 
     
-        # Panels with condensed padding
-        draw_paired_bars(ax1, 'Hours per 1M INT8', 'Hours per 1M FP16', 
-                         f'Inference Latency: Hours per 1M Ops {title_suffix}')
-        ax1.set_xlabel('Hours (Log)', fontsize=label_fontsize)
+        # --- PANEL 0: Time per Inference (Linear) ---
+        # Using the new dataframe columns calculated natively in seconds
+        draw_paired_bars(ax0, 'Latency per Inf. INT8 (s)', 'Latency per Inf. FP16 (s)', 
+                         f'Latency per Single Inference {title_suffix}', xscale='linear')
+        ax0.set_xlabel('Seconds (Linear Scale)', fontsize=label_fontsize)
     
-        draw_paired_bars(ax2, 'CO2-EQ per 1M INT8', 'CO2-EQ per 1M FP16', 
-                         f'Environmental Impact: kg CO2-eq per 1M Ops {title_suffix}')
-        ax2.set_xlabel('kg CO2-eq (Log)', fontsize=label_fontsize)
+        # --- PANEL 1: Hours per 1M (Log) ---
+        # Updated to the new 'Inf.' column names
+        draw_paired_bars(ax1, 'Hours per 1M Inf. INT8', 'Hours per 1M Inf. FP16', 
+                         f'Total Time: Hours per 1M Ops {title_suffix}', xscale='log')
+        ax1.set_xlabel('Hours (Log Scale)', fontsize=label_fontsize)
     
-        plt.subplots_adjust(hspace=0.35) # Reduced spacing
+        # --- PANEL 2: CO2-EQ (Log) ---
+        # Updated to the new '-kg' column names
+        draw_paired_bars(ax2, 'CO2-EQ-kg per 1M INT8', 'CO2-EQ-kg per 1M FP16', 
+                         f'Environmental Impact: kg CO2-eq per 1M Ops {title_suffix}', xscale='log')
+        ax2.set_xlabel('kg CO2-eq (Log Scale)', fontsize=label_fontsize)
+    
+        plt.subplots_adjust(hspace=0.4) 
         plt.tight_layout()
         plt.show()
 
