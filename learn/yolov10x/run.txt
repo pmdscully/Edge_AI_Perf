@@ -1,0 +1,5 @@
+# Desktop trial:
+python -m http.server 8001
+
+# Mobile App link:
+npx ngrok http 8001

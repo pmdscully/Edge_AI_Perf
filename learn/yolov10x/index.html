@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge AI Mobile HUD Sandbox</title>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin: 0; background: #121212; color: white; padding-top: 20px;}
+        
+        /* Layer video and canvas overlay cleanly */
+        .video-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 40px;
+        }
+        #video {
+            width: 100%;
+            height: auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: block;
+        }
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to pass through if needed */
+        }
+
+        .hud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 20px; font-weight: bold; font-size: 1.1rem; border-radius: 8px; z-index: 10; width: 85%; max-width: 450px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+        .controls { margin-top: 20px; padding: 20px; background: #222; border-radius: 8px; display: inline-block;}
+    </style>
+</head>
+<body>
+
+    <div id="statusHUD" class="hud" style="background: gray;">NO MODEL LOADED</div>
+    
+    <div class="video-container">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="overlayCanvas"></canvas>
+    </div>
+    
+    <div class="controls">
+        <label for="modelPicker">Deploy ONNX Model File:</label><br><br>
+        <input type="file" id="modelPicker" accept=".onnx">
+    </div>
+
+    <canvas id="hiddenCanvas" width="640" height="640" style="display:none;"></canvas>
+
+    <script>
+        // --- STUDENT CONFIGURATION AREA ---
+        // Instruct students to modify this array to match their fine-tuned classes exactly
+        const CLASS_LABELS = ["Smoke", "Fire"]; 
+        const CONF_THRESHOLD = 0.40; // Detection confidence cut-off
+        // ----------------------------------
+
+        let session = null;
+        let inferenceLoop = null;
+        let lastInferenceTime = performance.now();
+
+        const video = document.getElementById('video');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
+        const hiddenCtx = hiddenCanvas.getContext('2d', { willReadFrequently: true });
+        
+        const overlayCanvas = document.getElementById('overlayCanvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        const hud = document.getElementById('statusHUD');
+
+        // 1. Hook into camera and synchronize canvas bounds
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(stream => { 
+                video.srcObject = stream;
+                
+                // When video metrics anchor, size the overlay canvas coordinate system
+                video.addEventListener('loadedmetadata', () => {
+                    overlayCanvas.width = video.videoWidth;
+                    overlayCanvas.height = video.videoHeight;
+                    console.log(`Canvas bound synchronized to hardware stream: ${video.videoWidth}x${video.videoHeight}`);
+                });
+            })
+            .catch(err => {
+                console.error("Camera acquisition failed:", err);
+                hud.innerText = "CAMERA ACCESS DENIED";
+                hud.style.background = "red";
+            });
+
+        // 2. Dynamically instantiate ONNX Runtime Engine from file bytes
+        document.getElementById('modelPicker').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            hud.innerText = "LOADING MODEL INTO MEMORY...";
+            hud.style.background = "orange";
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            
+            try {
+                if (inferenceLoop) clearInterval(inferenceLoop);
+                
+                const arrayBuffer = await file.arrayBuffer();
+                session = await ort.InferenceSession.create(arrayBuffer);
+                
+                hud.innerText = "SYSTEM ACTIVE | CALCULATING FPS...";
+                hud.style.background = "green";
+                
+                // Loop execution as fast as the device processor can manage
+                inferenceLoop = setInterval(runMobileInference, 30); 
+
+            } catch (error) {
+                console.error("Model compilation failed:", error);
+                hud.innerText = "ERROR INGESTING MODEL ARCHITECTURE";
+                hud.style.background = "red";
+            }
+        });
+
+        // 3. Pixel Matrix Preprocessing Loop (Tensor Shape: 1, 3, 640, 640)
+        function preprocessVideoFrame() {
+            hiddenCtx.drawImage(video, 0, 0, 640, 640);
+            const imgData = hiddenCtx.getImageData(0, 0, 640, 640).data;
+            const float32Data = new Float32Array(3 * 640 * 640);
+            
+            // Standardizing interleaved canvas array to planar NCHW format
+            for (let i = 0; i < 640 * 640; i++) {
+                float32Data[i]                   = imgData[i * 4] / 255.0;     // R Channel
+                float32Data[i + 640 * 640]       = imgData[i * 4 + 1] / 255.0; // G Channel
+                float32Data[i + 2 * 640 * 640]   = imgData[i * 4 + 2] / 255.0; // B Channel
+            }
+            return new ort.Tensor('float32', float32Data, [1, 3, 640, 640]);
+        }
+
+        // 4. Edge Inference Loop & HUD Rendering Engine
+        async function runMobileInference() {
+            if (!session) return;
+
+            try {
+                // Calculate Real-time Processing Frequency (FPS)
+                const startTime = performance.now();
+                const fps = (1000 / (startTime - lastInferenceTime)).toFixed(1);
+                lastInferenceTime = startTime;
+
+                const inputTensor = preprocessVideoFrame();
+                const feeds = {};
+                feeds[session.inputNames[0]] = inputTensor;
+
+                // Execute on-device forward-pass
+                const outputs = await session.run(feeds);
+                const result = outputs[session.outputNames[0]].data; // Vector array space
+                const totalDetections = result.length / 6;           // YOLOv10 returns [1, 300, 6] shape chunks
+
+                // Clear previous box drawings
+                overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+                
+                let systemHazardActive = false;
+
+                // Scale modifiers to maps model coordinates back to real video pixel locations
+                const scaleX = overlayCanvas.width / 640;
+                const scaleY = overlayCanvas.height / 640;
+
+                // Parse the 300 prediction boundaries outputted by YOLOv10
+                for (let i = 0; i < totalDetections; i++) {
+                    const index = i * 6;
+                    const x1 = result[index];
+                    const y1 = result[index + 1];
+                    const x2 = result[index + 2];
+                    const y2 = result[index + 3];
+                    const confidence = result[index + 4];
+                    const classId = Math.round(result[index + 5]);
+
+                    // Drop parsing iterations below our threshold barrier
+                    if (confidence < CONF_THRESHOLD) continue;
+
+                    systemHazardActive = true;
+
+                    // Convert to display metrics
+                    const boxX = x1 * scaleX;
+                    const boxY = y1 * scaleY;
+                    const boxW = (x2 - x1) * scaleX;
+                    const boxH = (y2 - y1) * scaleY;
+
+                    // Draw Bounding Box HUD Element
+                    overlayCtx.strokeStyle = "#FF3838"; 
+                    overlayCtx.lineWidth = 4;
+                    overlayCtx.strokeRect(boxX, boxY, boxW, boxH);
+
+                    // Compile tag text (e.g., "Fire: 87%")
+                    const className = CLASS_LABELS[classId] || `Class ${classId}`;
+                    const labelText = `${className}: ${(confidence * 100).toFixed(0)}%`;
+
+                    // Contextual tag render background banner
+                    overlayCtx.fillStyle = "#FF3838";
+                    overlayCtx.font = "bold 14px monospace";
+                    const textWidth = overlayCtx.measureText(labelText).width;
+                    overlayCtx.fillRect(boxX - 2, boxY - 22, textWidth + 10, 22);
+
+                    // Write Text Tag over banner
+                    overlayCtx.fillStyle = "white";
+                    overlayCtx.fillText(labelText, boxX + 3, boxY - 6);
+                }
+
+                // Dynamic Top Dashboard Updates
+                if (systemHazardActive) {
+                    hud.innerText = `HAZARD ACTIVE | ${fps} FPS`;
+                    hud.style.background = "#FF3838";
+                    if (navigator.vibrate) navigator.vibrate(50); // Direct hardware haptic warning
+                } else {
+                    hud.innerText = `SYSTEM SAFE | ${fps} FPS`;
+                    hud.style.background = "green";
+                }
+
+            } catch (error) {
+                console.error("Runtime Exception:", error);
+                hud.innerText = "INFERENCE PIPELINE BROKEN";
+                hud.style.background = "orange";
+                clearInterval(inferenceLoop);
+            }
+        }
+    </script>
+</body>
+</html>
