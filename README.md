@@ -115,9 +115,7 @@ Plotting.plot_comparison_metrics(df_comparison)
      *Note, missing bars indicate no support for that dtype, (i.e. Syntiant NDP200 has no data on FP performance).*
   2. `CO2-eq Efficiencies`, according to an IPCC Tier 1 emissions factor for CO2-eq (KG) per KWH of energy consumption.
 
-![image-20260609160959213](README.assets/image-20260609160959213.png)
-
-
+![Barplot_Latency_CO2](README.assets/Barplot_Latency_CO2.png)
 
 
 
