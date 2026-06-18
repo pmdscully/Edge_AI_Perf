@@ -8,7 +8,21 @@ Alpha version.
 
 * **Goal:** A library to make simple/ quick benchmark estimates of DL/LLM machine learning models for their deployment viability onto edge computing devices. 
 
-* **Problem:** Estimating the feasibility and viability for (edge) hardware deployments is hard. Benchmarking data is patchy (in product specs, datasheets and benchmark tools). This library serves to give simple (*approximate*) estimates for a broad range of device deployment, measured by a ratio comparison from a baseline performance, without long benchmarking trials (differing from MLPerf / MLCommons).
+* **Problem:** Estimating the feasibility and viability for (edge) hardware deployments is hard. Benchmarking data is patchy (in product specs, datasheets and benchmark tools). 
+
+* **Approach:** This library serves to calculate performance approximations for a broad range of device deployments, measured by a ratio comparison from a baseline performance. No long benchmarking trials required (which differing from MLPerf / MLCommons). 
+  * **Approximation Design Choices:** 
+    * Many nuanced deployment factors could be (*but have not yet been*) accounted for in these approximations. Consider the following as a list of possible extensions: 
+      * *backend (e.g. XNNPack) limitations of model layer or NMS mapping to architecture instruction set compatibility;*
+      * *Quantization Aware Training (QAT) effects on memory of backprop gradient FP16 precision vs 32-bit weight memory storage;*
+      * *K-type quantization effect on active weight, as a factor on performance accuracy.*
+
+    * To approximate the deployment factor effects, the design choice is to wrap these nuances under summary statistics, consistent across each hardware-device type; including: 
+      * (1) Peak performance of GOPS Giga operations per second on 8-bit integers, 
+      * (2) Peak performance of GFLOPS operations on 16-bit floating points;
+      * (3) Raw available memory for runtime inference; and
+      * (4) Peak performance of power consumption (watt-hours) to calculate carbon footprint (CO2-EQ kg).
+
 
 
 
