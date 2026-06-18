@@ -10,7 +10,7 @@
 
 * **Problem:** Estimating the feasibility and viability for (edge) hardware deployments is hard. Benchmarking data is patchy (in product specs, datasheets and benchmark tools). 
 
-* **Approach:** This library serves to calculate performance approximations for a broad range of device deployments, measured by a ratio comparison from a baseline performance. No long benchmarking trials required (which differing from MLPerf / MLCommons). 
+* **Approach:** This library serves to calculate performance approximations for a broad range of device deployments, measured by a ratio comparison from a baseline performance. No long benchmarking trials required (which differ from MLPerf / MLCommons). 
   * **Approximation Design Choices:** 
     * Many nuanced deployment factors could be (*but have not yet been*) accounted for in these approximations. Consider the following as a list of possible extensions: 
       * *backend (e.g. XNNPack) limitations of model layer or NMS mapping to architecture instruction set compatibility;*
