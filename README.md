@@ -484,7 +484,7 @@ Output example:
 
 ---
 
-## Limitations / Warnings / Future Improvements:
+## Limitations / Warnings / Welcome Pull Requests:
 
 1. **Currently, only two types of memory data types are estimated (`INT8` and `FP8`).**  Warnings:
    - The mapping from model param dtype to the columns in the table are approximate, see [code line](https://github.com/pmdscully/Edge_AI_Perf/blob/bf07357b21b540eb01d1a473813121246f37b148/lib_edge_eval/lib_edge_eval.py#L113).
@@ -493,10 +493,11 @@ Output example:
      - Replace TOPS / TFLOPS  with specific columns  for `OPS per dtype`  (e.g. INT4, INT8, FP8, BF16, TF32) into the processors hardware table for per data type performance throughput (from datasheets).
      - Update specific operations per second (OPS) per data type to the code mappings.
 
-2. Incorporate efficiencies information into estimates: i.e.
+2. **Expand Hardware in Table**
+
+3. **Incorporate efficiencies information into estimates: i.e.**
    1.  `memory speed efficiencies`; a distinct performance bottleneck for large scale models and hardware.
    2. `ops to watts efficiencies`:  this is illustrated by the relationship from TOPS/TFLOPS to Watts, and shown in CO2-EQ-kg plot.
-
 
 
 
