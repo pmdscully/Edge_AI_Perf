@@ -1,10 +1,10 @@
-# Edge_AI_Perf
+# Edge AI Performance Approximation Tool
 
-Alpha version.
+> [!note]
+>
+> *Alpha version. Tested for the specified use case: (1) Using Colab T4, (2) Calculate CO2-EQ for Thailand from Jan 2026.*
 
-*Tested for the specified use case: (1) Using Colab T4, (2) Calculate CO2-EQ for Thailand from Jan 2026.*
-
-## Objective & Problem:
+## Objective & Problem & Approach:
 
 * **Goal:** A library to make simple/ quick benchmark estimates of DL/LLM machine learning models for their deployment viability onto edge computing devices. 
 
